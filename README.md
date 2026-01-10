@@ -1,52 +1,36 @@
-# Square UI
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-Collection of beautifully crafted open-source layouts UI built with Next.js and shadcn/ui.
+## Getting Started
 
-## Sponsors
+First, run the development server:
 
-This project is sponsored by:
+```bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
+```
 
-- <a href="https://ui.lndev.me/" target="_blank">lndev/ui</a> : Fine components coded by lndev.
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-[Become a sponsor](https://ecaefmew.mychariow.shop/prd_3cu1s0)
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-## Templates
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-> **Note:** Templates using Radix UI are located in `templates/`, while templates using Base UI are in `templates-baseui/`.
+## Learn More
 
-| Template              | Description                                                                                                      | Live Demo                                                   | GitHub (Radix UI)                                                                      | GitHub (Base UI)                                                                        | Design                                   |
-| --------------------- | ---------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- | -------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- | ---------------------------------------- |
-| **Bookmarks**         | Modern bookmarks manager with collections, tags, favorites, archive, and trash.                                  | [View Demo](https://square-ui-bookmarks.vercel.app)         | [Source](https://github.com/ln-dev7/square-ui/tree/master/templates/bookmarks)         | [Source](https://github.com/ln-dev7/square-ui/tree/master/templates-baseui/bookmarks)   | [LN](https://x.com/ln_dev7)              |
-| **Maps**              | Modern maps dashboard with location search, favorites, recents, and interactive map controls.                    | [View Demo](https://square-ui-maps.vercel.app)              | [Source](https://github.com/ln-dev7/square-ui/tree/master/templates/maps)              | [Source](https://github.com/ln-dev7/square-ui/tree/master/templates-baseui/maps)        | [LN](https://x.com/ln_dev7)              |
-| **Files**             | Modern file manager with folders, storage overview, file grid/list view, and navigation.                         | [View Demo](https://square-ui-files.vercel.app)             | [Source](https://github.com/ln-dev7/square-ui/tree/master/templates/files)             | [Source](https://github.com/ln-dev7/square-ui/tree/master/templates-baseui/files)       | [LN](https://x.com/ln_dev7)              |
-| **Dashboard 4**       | Modern dashboard with workgroups, multi-line leads chart, top performers, and lead management table.             | [View Demo](https://square-ui-dashboard-4.vercel.app)       | [Source](https://github.com/ln-dev7/square-ui/tree/master/templates/dashboard-4)       | [Source](https://github.com/ln-dev7/square-ui/tree/master/templates-baseui/dashboard-4) | [Augustas](https://x.com/AugustasDesign) |
-| **Leads**             | Modern leads management dashboard with statistics, charts, and data table with filters.                          | [View Demo](https://square-ui-leads.vercel.app)             | [Source](https://github.com/ln-dev7/square-ui/tree/master/templates/leads)             | [Source](https://github.com/ln-dev7/square-ui/tree/master/templates-baseui/leads)       | [Rico](https://x.com/_heyrico)           |
-| **Dashboard 3**       | Modern HR dashboard with financial flow chart, employee list with filters, and layout customization.             | [View Demo](https://square-ui-dashboard-3.vercel.app)       | [Source](https://github.com/ln-dev7/square-ui/tree/master/templates/dashboard-3)       | [Source](https://github.com/ln-dev7/square-ui/tree/master/templates-baseui/dashboard-3) | [Rico](https://x.com/_heyrico)           |
-| **Dashboard 2**       | Modern CRM dashboard with revenue charts, lead sources, deals table with pagination, and filters.                | [View Demo](https://square-ui-dashboard-2.vercel.app)       | [Source](https://github.com/ln-dev7/square-ui/tree/master/templates/dashboard-2)       |                                                                                         | [Rico](https://x.com/_heyrico)           |
-| **Employees**         | Modern employee management dashboard with statistics, hire/exit charts, and data table.                          | [View Demo](https://square-ui-employees.vercel.app)         | [Source](https://github.com/ln-dev7/square-ui/tree/master/templates/employees)         |                                                                                         | [Rico](https://x.com/_heyrico)           |
-| **Payrolls**          | Modern payroll management dashboard with expense charts, filters, and data table.                                | [View Demo](https://square-ui-payrolls.vercel.app)          | [Source](https://github.com/ln-dev7/square-ui/tree/master/templates/payrolls)          |                                                                                         | [Rico](https://x.com/_heyrico)           |
-| **Tasks**             | Modern task management dashboard with statistics, charts, and kanban board.                                      | [View Demo](https://square-ui-tasks.vercel.app)             | [Source](https://github.com/ln-dev7/square-ui/tree/master/templates/tasks)             |                                                                                         | [Rico](https://x.com/_heyrico)           |
-| **Projects Timeline** | Timeline interface for managing projects.                                                                        | [View Demo](https://square-ui-projects-timeline.vercel.app) | [Source](https://github.com/ln-dev7/square-ui/tree/master/templates/projects-timeline) |                                                                                         | [Rico](https://x.com/_heyrico)           |
-| **Calendar**          | Modern calendar interface with week view, event management, and scheduling.                                      | [View Demo](https://square-ui-calendar.vercel.app)          | [Source](https://github.com/ln-dev7/square-ui/tree/master/templates/calendar)          |                                                                                         | [Rico](https://x.com/_heyrico)           |
-| **Dashboard**         | Modern dashboard interface with statistics, charts, people table, and recent documents.                          | [View Demo](https://square-ui-dashboard-1.vercel.app)       | [Source](https://github.com/ln-dev7/square-ui/tree/master/templates/dashboard-1)       |                                                                                         | [Augustas](https://x.com/AugustasDesign) |
-| **Chat**              | Modern AI chat interface with conversation history and intelligent assistant.                                    | [View Demo](https://square-ui-chat.vercel.app)              | [Source](https://github.com/ln-dev7/square-ui/tree/master/templates/chat)              |                                                                                         | [Rico](https://x.com/_heyrico)           |
-| **Emails**            | Modern email client interface with inbox, folders, and email details.                                            | [View Demo](https://square-ui-emails.vercel.app)            | [Source](https://github.com/ln-dev7/square-ui/tree/master/templates/emails)            | [Source](https://github.com/ln-dev7/square-ui/tree/master/templates-baseui/emails)      | [Rico](https://x.com/_heyrico)           |
-| **Task Management**   | Simple board interface for managing tasks.                                                                       | [View Demo](https://square-ui-task-management.vercel.app)   | [Source](https://github.com/ln-dev7/square-ui/tree/master/templates/task-management)   |                                                                                         | [Rico](https://x.com/_heyrico)           |
-| **Circle**            | Project management interface inspired by Linear. This application allows tracking of issues, projects and teams. | [View Demo](https://circle.lndev.me)                        | [Source](https://github.com/ln-dev7/circle)                                            |                                                                                         | Inspired by Linear                       |
+To learn more about Next.js, take a look at the following resources:
 
-## 🛠️ Technologies
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-- **Framework**: [Next.js](https://nextjs.org/)
-- **Langage**: [TypeScript](https://www.typescriptlang.org/)
-- **UI Components**: [shadcn/ui](https://ui.shadcn.com/)
-- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-## Star History
+## Deploy on Vercel
 
-<a href="https://www.star-history.com/#ln-dev7/square-ui&Date">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=ln-dev7/square-ui&type=Date&theme=dark" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=ln-dev7/square-ui&type=Date" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=ln-dev7/square-ui&type=Date" />
- </picture>
-</a>
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
