@@ -49,7 +49,21 @@ import {
   Trash2,
 } from "lucide-react";
 import { useBookmarksStore } from "@/store/bookmarks-store";
-import { collections, tags } from "@/mock-data/bookmarks";
+
+type Collection = {
+  id: string;
+  name: string;
+  icon: string;
+  color: string;
+  count: number;
+};
+
+type Tag = {
+  id: string;
+  name: string;
+  color: string;
+  count: number;
+};
 
 const collectionIcons: Record<string, React.ElementType> = {
   bookmark: Bookmark,
@@ -72,6 +86,9 @@ export function BookmarksSidebar({
   const pathname = usePathname();
   const [collectionsOpen, setCollectionsOpen] = React.useState(true);
   const [tagsOpen, setTagsOpen] = React.useState(true);
+  const [collections, setCollections] = React.useState<Collection[]>([]);
+  const [tags, setTags] = React.useState<Tag[]>([]);
+  const [isLoading, setIsLoading] = React.useState(true);
   const {
     selectedCollection,
     setSelectedCollection,
@@ -79,6 +96,35 @@ export function BookmarksSidebar({
     toggleTag,
     clearTags,
   } = useBookmarksStore();
+
+  // Fetch collections and tags from API
+  React.useEffect(() => {
+    async function fetchData() {
+      try {
+        setIsLoading(true);
+        const [collectionsRes, tagsRes] = await Promise.all([
+          fetch("/api/collections"),
+          fetch("/api/tags"),
+        ]);
+
+        if (collectionsRes.ok) {
+          const collectionsData = await collectionsRes.json();
+          setCollections(collectionsData.collections || []);
+        }
+
+        if (tagsRes.ok) {
+          const tagsData = await tagsRes.json();
+          setTags(tagsData.tags || []);
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchData();
+  }, []);
 
   const isHomePage = pathname === "/";
 
@@ -175,38 +221,52 @@ export function BookmarksSidebar({
           {collectionsOpen && (
             <SidebarGroupContent>
               <SidebarMenu className="mt-2">
-                {collections.map((collection) => {
-                  const IconComponent =
-                    collectionIcons[collection.icon] || Folder;
-                  const isActive =
-                    isHomePage && selectedCollection === collection.id;
-                  return (
-                    <SidebarMenuItem key={collection.id}>
-                      <SidebarMenuButton
-                        asChild
-                        isActive={isActive}
-                        className="h-[38px]"
-                      >
-                        <Link
-                          href="/"
-                          onClick={() => {
-                            setSelectedCollection(collection.id);
-                            clearTags();
-                          }}
+                {isLoading ? (
+                  <SidebarMenuItem>
+                    <div className="px-2 py-1 text-xs text-muted-foreground">
+                      Loading...
+                    </div>
+                  </SidebarMenuItem>
+                ) : collections.length === 0 ? (
+                  <SidebarMenuItem>
+                    <div className="px-2 py-1 text-xs text-muted-foreground">
+                      No collections yet
+                    </div>
+                  </SidebarMenuItem>
+                ) : (
+                  collections.map((collection) => {
+                    const IconComponent =
+                      collectionIcons[collection.icon] || Folder;
+                    const isActive =
+                      isHomePage && selectedCollection === collection.id;
+                    return (
+                      <SidebarMenuItem key={collection.id}>
+                        <SidebarMenuButton
+                          asChild
+                          isActive={isActive}
+                          className="h-[38px]"
                         >
-                          <IconComponent className="size-5" />
-                          <span className="flex-1">{collection.name}</span>
-                          <span className="text-muted-foreground text-xs">
-                            {collection.count}
-                          </span>
-                          {isActive && (
-                            <ChevronRight className="size-4 text-muted-foreground opacity-60" />
-                          )}
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  );
-                })}
+                          <Link
+                            href="/"
+                            onClick={() => {
+                              setSelectedCollection(collection.id);
+                              clearTags();
+                            }}
+                          >
+                            <IconComponent className="size-5" />
+                            <span className="flex-1">{collection.name}</span>
+                            <span className="text-muted-foreground text-xs">
+                              {collection.count}
+                            </span>
+                            {isActive && (
+                              <ChevronRight className="size-4 text-muted-foreground opacity-60" />
+                            )}
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    );
+                  })
+                )}
               </SidebarMenu>
             </SidebarGroupContent>
           )}
@@ -241,21 +301,27 @@ export function BookmarksSidebar({
           {tagsOpen && (
             <SidebarGroupContent>
               <div className="flex flex-wrap gap-1.5 mt-2">
-                {tags.map((tag) => (
-                  <button
-                    key={tag.id}
-                    onClick={() => toggleTag(tag.id)}
-                    className={cn(
-                      "inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium transition-colors",
-                      selectedTags.includes(tag.id)
-                        ? "bg-primary text-primary-foreground"
-                        : tag.color
-                    )}
-                  >
-                    <Tag className="size-3" />
-                    {tag.name}
-                  </button>
-                ))}
+                {isLoading ? (
+                  <span className="text-xs text-muted-foreground px-2">Loading...</span>
+                ) : tags.length === 0 ? (
+                  <span className="text-xs text-muted-foreground px-2">No tags yet</span>
+                ) : (
+                  tags.map((tag) => (
+                    <button
+                      key={tag.id}
+                      onClick={() => toggleTag(tag.id)}
+                      className={cn(
+                        "inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium transition-colors",
+                        selectedTags.includes(tag.id)
+                          ? "bg-primary text-primary-foreground"
+                          : tag.color
+                      )}
+                    >
+                      <Tag className="size-3" />
+                      {tag.name}
+                    </button>
+                  ))
+                )}
               </div>
             </SidebarGroupContent>
           )}

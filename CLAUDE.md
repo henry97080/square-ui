@@ -85,7 +85,17 @@ export async function query<T = any>(
   const result = await sql.query(queryText, params);
   return { rows: result.rows as T[] };
 }
+
+export async function execute(
+  queryText: string,
+  params: any[] = []
+): Promise<{ rowCount: number }> {
+  const result = await sql.query(queryText, params);
+  return { rowCount: result.rowCount ?? 0 };
+}
 ```
+
+Use `query()` for SELECT operations and `execute()` for INSERT/UPDATE/DELETE.
 
 ### SQL Syntax Notes (PostgreSQL vs SQLite):
 - Parameter placeholders: `$1, $2, $3` instead of `?`
