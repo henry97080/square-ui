@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,10 +19,10 @@ import {
   Trash2,
   Tag,
   Archive,
+  Bookmark,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useBookmarksStore } from "@/store/bookmarks-store";
-import { tags as allTags, type Bookmark } from "@/mock-data/bookmarks";
 
 interface BookmarkCardProps {
   bookmark: Bookmark;
@@ -34,6 +35,24 @@ export function BookmarkCard({
 }: BookmarkCardProps) {
   const { toggleFavorite, archiveBookmark, trashBookmark } =
     useBookmarksStore();
+  const [allTags, setAllTags] = React.useState<any[]>([]);
+
+  // Fetch tags from API
+  React.useEffect(() => {
+    async function fetchTags() {
+      try {
+        const response = await fetch("/api/tags");
+        if (response.ok) {
+          const data = await response.json();
+          setAllTags(data.tags || []);
+        }
+      } catch (error) {
+        console.error("Error fetching tags:", error);
+      }
+    }
+    fetchTags();
+  }, []);
+
   const bookmarkTags = allTags.filter((tag) => bookmark.tags.includes(tag.id));
 
   const handleCopyUrl = () => {
@@ -44,15 +63,34 @@ export function BookmarkCard({
     window.open(bookmark.url, "_blank");
   };
 
+  // Favicon component with fallback
+  const Favicon = ({ src, alt, className }: { src: string; alt: string; className?: string }) => {
+    const [error, setError] = React.useState(false);
+
+    if (!src || error) {
+      return <Bookmark className={className} />;
+    }
+
+    return (
+      <Image
+        src={src}
+        alt={alt}
+        width={32}
+        height={32}
+        className={className}
+        onError={() => setError(true)}
+        unoptimized
+      />
+    );
+  };
+
   if (variant === "list") {
     return (
       <div className="group flex items-center gap-4 p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors">
         <div className="size-10 rounded-lg bg-muted flex items-center justify-center overflow-hidden shrink-0">
-          <Image
+          <Favicon
             src={bookmark.favicon}
             alt={bookmark.title}
-            width={24}
-            height={24}
             className={cn("size-6", bookmark.hasDarkIcon && "dark:invert")}
           />
         </div>
@@ -205,11 +243,9 @@ export function BookmarkCard({
       >
         <div className="h-32 bg-linear-to-br from-muted/50 to-muted flex items-center justify-center">
           <div className="size-12 rounded-xl bg-background shadow-sm flex items-center justify-center">
-            <Image
+            <Favicon
               src={bookmark.favicon}
               alt={bookmark.title}
-              width={32}
-              height={32}
               className={cn("size-8", bookmark.hasDarkIcon && "dark:invert")}
             />
           </div>
