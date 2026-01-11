@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import { useBookmarksStore } from "@/store/bookmarks-store";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,22 +10,53 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Trash2, MoreHorizontal, RotateCcw, XCircle, ExternalLink } from "lucide-react";
+import { Trash2, MoreHorizontal, RotateCcw, XCircle, ExternalLink, Bookmark } from "lucide-react";
 import Image from "next/image";
-import { type Bookmark } from "@/mock-data/bookmarks";
 import { cn } from "@/lib/utils";
+
+interface Bookmark {
+  id: string;
+  title: string;
+  url: string;
+  description: string;
+  favicon: string;
+  collectionId: string;
+  tags: string[];
+  createdAt: string;
+  isFavorite: boolean;
+  hasDarkIcon?: boolean;
+}
 
 function TrashedBookmarkCard({ bookmark }: { bookmark: Bookmark }) {
   const { restoreFromTrash, permanentlyDelete } = useBookmarksStore();
 
+  // Favicon component with fallback
+  const Favicon = ({ src, alt, className }: { src: string; alt: string; className?: string }) => {
+    const [error, setError] = React.useState(false);
+
+    if (!src || error) {
+      return <Bookmark className={className} />;
+    }
+
+    return (
+      <Image
+        src={src}
+        alt={alt}
+        width={32}
+        height={32}
+        className={className}
+        onError={() => setError(true)}
+        unoptimized
+      />
+    );
+  };
+
   return (
     <div className="group flex items-center gap-4 p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors opacity-75 hover:opacity-100">
       <div className="size-10 rounded-lg bg-muted flex items-center justify-center overflow-hidden shrink-0">
-        <Image
+        <Favicon
           src={bookmark.favicon}
           alt={bookmark.title}
-          width={24}
-          height={24}
           className={cn("size-6 grayscale", bookmark.hasDarkIcon && "dark:invert")}
         />
       </div>
@@ -72,8 +104,37 @@ function TrashedBookmarkCard({ bookmark }: { bookmark: Bookmark }) {
 }
 
 export function TrashContent() {
-  const { getTrashedBookmarks, trashedBookmarks } = useBookmarksStore();
+  const { getTrashedBookmarks, setTrashedBookmarks, trashedBookmarks } = useBookmarksStore();
   const filteredTrash = getTrashedBookmarks();
+
+  // Fetch trashed bookmarks from API
+  React.useEffect(() => {
+    async function fetchData() {
+      try {
+        const response = await fetch("/api/bookmarks?status=trashed");
+
+        if (response.ok) {
+          const data = await response.json();
+          const bookmarks: Bookmark[] = data.bookmarks.map((b: any) => ({
+            id: b.id,
+            title: b.title,
+            url: b.url,
+            description: b.description || "",
+            favicon: b.favicon || "",
+            collectionId: b.collectionId || "",
+            tags: b.tags || [],
+            createdAt: b.createdAt,
+            isFavorite: b.isFavorite || false,
+            hasDarkIcon: b.hasDarkIcon || false,
+          }));
+          setTrashedBookmarks(bookmarks);
+        }
+      } catch (error) {
+        console.error("Error fetching trashed bookmarks:", error);
+      }
+    }
+    fetchData();
+  }, [setTrashedBookmarks]);
 
   return (
     <div className="flex-1 w-full overflow-auto">

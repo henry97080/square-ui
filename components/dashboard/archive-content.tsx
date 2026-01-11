@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import { useBookmarksStore } from "@/store/bookmarks-store";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,23 +10,61 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Archive, MoreHorizontal, RotateCcw, Trash2, ExternalLink } from "lucide-react";
+import { Archive, MoreHorizontal, RotateCcw, Trash2, ExternalLink, Bookmark } from "lucide-react";
 import Image from "next/image";
-import { tags as allTags, type Bookmark } from "@/mock-data/bookmarks";
 import { cn } from "@/lib/utils";
 
-function ArchivedBookmarkCard({ bookmark }: { bookmark: Bookmark }) {
+interface Tag {
+  id: string;
+  name: string;
+  color: string;
+  count: number;
+}
+
+interface Bookmark {
+  id: string;
+  title: string;
+  url: string;
+  description: string;
+  favicon: string;
+  collectionId: string;
+  tags: string[];
+  createdAt: string;
+  isFavorite: boolean;
+  hasDarkIcon?: boolean;
+}
+
+function ArchivedBookmarkCard({ bookmark, allTags }: { bookmark: Bookmark; allTags: Tag[] }) {
   const { restoreFromArchive, trashBookmark } = useBookmarksStore();
   const bookmarkTags = allTags.filter((tag) => bookmark.tags.includes(tag.id));
+
+  // Favicon component with fallback
+  const Favicon = ({ src, alt, className }: { src: string; alt: string; className?: string }) => {
+    const [error, setError] = React.useState(false);
+
+    if (!src || error) {
+      return <Bookmark className={className} />;
+    }
+
+    return (
+      <Image
+        src={src}
+        alt={alt}
+        width={32}
+        height={32}
+        className={className}
+        onError={() => setError(true)}
+        unoptimized
+      />
+    );
+  };
 
   return (
     <div className="group flex items-center gap-4 p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors">
       <div className="size-10 rounded-lg bg-muted flex items-center justify-center overflow-hidden shrink-0">
-        <Image
+        <Favicon
           src={bookmark.favicon}
           alt={bookmark.title}
-          width={24}
-          height={24}
           className={cn("size-6", bookmark.hasDarkIcon && "dark:invert")}
         />
       </div>
@@ -93,8 +132,46 @@ function ArchivedBookmarkCard({ bookmark }: { bookmark: Bookmark }) {
 }
 
 export function ArchiveContent() {
-  const { getArchivedBookmarks } = useBookmarksStore();
+  const { getArchivedBookmarks, setArchivedBookmarks } = useBookmarksStore();
+  const [allTags, setAllTags] = React.useState<Tag[]>([]);
   const archivedBookmarks = getArchivedBookmarks();
+
+  // Fetch archived bookmarks and tags from API
+  React.useEffect(() => {
+    async function fetchData() {
+      try {
+        const [bookmarksRes, tagsRes] = await Promise.all([
+          fetch("/api/bookmarks?status=archived"),
+          fetch("/api/tags"),
+        ]);
+
+        if (bookmarksRes.ok) {
+          const data = await bookmarksRes.json();
+          const bookmarks: Bookmark[] = data.bookmarks.map((b: any) => ({
+            id: b.id,
+            title: b.title,
+            url: b.url,
+            description: b.description || "",
+            favicon: b.favicon || "",
+            collectionId: b.collectionId || "",
+            tags: b.tags || [],
+            createdAt: b.createdAt,
+            isFavorite: b.isFavorite || false,
+            hasDarkIcon: b.hasDarkIcon || false,
+          }));
+          setArchivedBookmarks(bookmarks);
+        }
+
+        if (tagsRes.ok) {
+          const data = await tagsRes.json();
+          setAllTags(data.tags || []);
+        }
+      } catch (error) {
+        console.error("Error fetching archived bookmarks:", error);
+      }
+    }
+    fetchData();
+  }, [setArchivedBookmarks]);
 
   return (
     <div className="flex-1 w-full overflow-auto">
@@ -114,7 +191,7 @@ export function ArchiveContent() {
 
         <div className="flex flex-col gap-2">
           {archivedBookmarks.map((bookmark) => (
-            <ArchivedBookmarkCard key={bookmark.id} bookmark={bookmark} />
+            <ArchivedBookmarkCard key={bookmark.id} bookmark={bookmark} allTags={allTags} />
           ))}
         </div>
 

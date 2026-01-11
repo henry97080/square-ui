@@ -24,6 +24,8 @@ interface BookmarksState {
   setFilterType: (filter: FilterType) => void;
   setBookmarks: (bookmarks: Bookmark[]) => void;
   addBookmark: (bookmark: Bookmark) => void;
+  setArchivedBookmarks: (bookmarks: Bookmark[]) => void;
+  setTrashedBookmarks: (bookmarks: Bookmark[]) => void;
   toggleFavorite: (bookmarkId: string) => void;
   archiveBookmark: (bookmarkId: string) => void;
   restoreFromArchive: (bookmarkId: string) => void;
@@ -71,59 +73,123 @@ export const useBookmarksStore = create<BookmarksState>((set, get) => ({
   addBookmark: (bookmark) =>
     set((state) => ({ bookmarks: [bookmark, ...state.bookmarks] })),
 
-  toggleFavorite: (bookmarkId) =>
-    set((state) => ({
-      bookmarks: state.bookmarks.map((bookmark) =>
-        bookmark.id === bookmarkId
-          ? { ...bookmark, isFavorite: !bookmark.isFavorite }
-          : bookmark
-      ),
-    })),
+  setArchivedBookmarks: (bookmarks) => set({ archivedBookmarks: bookmarks }),
 
-  archiveBookmark: (bookmarkId) =>
-    set((state) => {
-      const bookmark = state.bookmarks.find((b) => b.id === bookmarkId);
-      if (!bookmark) return state;
-      return {
-        bookmarks: state.bookmarks.filter((b) => b.id !== bookmarkId),
-        archivedBookmarks: [...state.archivedBookmarks, bookmark],
-      };
-    }),
+  setTrashedBookmarks: (bookmarks) => set({ trashedBookmarks: bookmarks }),
 
-  restoreFromArchive: (bookmarkId) =>
-    set((state) => {
-      const bookmark = state.archivedBookmarks.find((b) => b.id === bookmarkId);
-      if (!bookmark) return state;
-      return {
-        archivedBookmarks: state.archivedBookmarks.filter((b) => b.id !== bookmarkId),
-        bookmarks: [...state.bookmarks, bookmark],
-      };
-    }),
+  toggleFavorite: async (bookmarkId) => {
+    try {
+      const response = await fetch(`/api/bookmarks?id=${bookmarkId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isFavorite: true }),
+      });
 
-  trashBookmark: (bookmarkId) =>
-    set((state) => {
-      const bookmark = state.bookmarks.find((b) => b.id === bookmarkId);
-      if (!bookmark) return state;
-      return {
-        bookmarks: state.bookmarks.filter((b) => b.id !== bookmarkId),
-        trashedBookmarks: [...state.trashedBookmarks, bookmark],
-      };
-    }),
+      if (response.ok) {
+        set((state) => ({
+          bookmarks: state.bookmarks.map((bookmark) =>
+            bookmark.id === bookmarkId
+              ? { ...bookmark, isFavorite: !bookmark.isFavorite }
+              : bookmark
+          ),
+        }));
+      }
+    } catch (error) {
+      console.error('Error toggling favorite:', error);
+    }
+  },
 
-  restoreFromTrash: (bookmarkId) =>
-    set((state) => {
-      const bookmark = state.trashedBookmarks.find((b) => b.id === bookmarkId);
-      if (!bookmark) return state;
-      return {
-        trashedBookmarks: state.trashedBookmarks.filter((b) => b.id !== bookmarkId),
-        bookmarks: [...state.bookmarks, bookmark],
-      };
-    }),
+  archiveBookmark: async (bookmarkId) => {
+    try {
+      const response = await fetch(`/api/bookmarks?id=${bookmarkId}&action=archive`, {
+        method: 'DELETE',
+      });
 
-  permanentlyDelete: (bookmarkId) =>
-    set((state) => ({
-      trashedBookmarks: state.trashedBookmarks.filter((b) => b.id !== bookmarkId),
-    })),
+      if (response.ok) {
+        set((state) => ({
+          bookmarks: state.bookmarks.filter((b) => b.id !== bookmarkId),
+          archivedBookmarks: [...state.archivedBookmarks, state.bookmarks.find((b) => b.id === bookmarkId)!],
+        }));
+      }
+    } catch (error) {
+      console.error('Error archiving bookmark:', error);
+    }
+  },
+
+  restoreFromArchive: async (bookmarkId) => {
+    try {
+      const response = await fetch(`/api/bookmarks?id=${bookmarkId}&action=restore`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        set((state) => {
+          const bookmark = state.archivedBookmarks.find((b) => b.id === bookmarkId);
+          if (!bookmark) return state;
+          return {
+            archivedBookmarks: state.archivedBookmarks.filter((b) => b.id !== bookmarkId),
+            bookmarks: [...state.bookmarks, bookmark],
+          };
+        });
+      }
+    } catch (error) {
+      console.error('Error restoring from archive:', error);
+    }
+  },
+
+  trashBookmark: async (bookmarkId) => {
+    try {
+      const response = await fetch(`/api/bookmarks?id=${bookmarkId}&action=trash`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        set((state) => ({
+          bookmarks: state.bookmarks.filter((b) => b.id !== bookmarkId),
+          trashedBookmarks: [...state.trashedBookmarks, state.bookmarks.find((b) => b.id === bookmarkId)!],
+        }));
+      }
+    } catch (error) {
+      console.error('Error trashing bookmark:', error);
+    }
+  },
+
+  restoreFromTrash: async (bookmarkId) => {
+    try {
+      const response = await fetch(`/api/bookmarks?id=${bookmarkId}&action=restore`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        set((state) => {
+          const bookmark = state.trashedBookmarks.find((b) => b.id === bookmarkId);
+          if (!bookmark) return state;
+          return {
+            trashedBookmarks: state.trashedBookmarks.filter((b) => b.id !== bookmarkId),
+            bookmarks: [...state.bookmarks, bookmark],
+          };
+        });
+      }
+    } catch (error) {
+      console.error('Error restoring from trash:', error);
+    }
+  },
+
+  permanentlyDelete: async (bookmarkId) => {
+    try {
+      const response = await fetch(`/api/bookmarks?id=${bookmarkId}&action=delete`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        set((state) => ({
+          trashedBookmarks: state.trashedBookmarks.filter((b) => b.id !== bookmarkId),
+        }));
+      }
+    } catch (error) {
+      console.error('Error permanently deleting:', error);
+    }
+  },
 
   getFilteredBookmarks: () => {
     const state = get();

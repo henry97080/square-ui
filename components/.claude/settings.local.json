@@ -9,7 +9,8 @@
       "Bash(pnpm add:*)",
       "Bash(curl:*)",
       "mcp__zai-mcp-server__extract_text_from_screenshot",
-      "mcp__zai-mcp-server__analyze_image"
+      "mcp__zai-mcp-server__analyze_image",
+      "Bash(pnpm build)"
     ]
   }
 }

@@ -19,10 +19,24 @@ import {
   Trash2,
   Tag,
   Archive,
-  Bookmark,
+  Bookmark as BookmarkIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useBookmarksStore } from "@/store/bookmarks-store";
+import { EditBookmarkDialog } from "./edit-bookmark-dialog";
+
+interface Bookmark {
+  id: string;
+  title: string;
+  url: string;
+  description: string;
+  favicon: string;
+  collectionId: string;
+  tags: string[];
+  createdAt: string;
+  isFavorite: boolean;
+  hasDarkIcon?: boolean;
+}
 
 interface BookmarkCardProps {
   bookmark: Bookmark;
@@ -36,21 +50,30 @@ export function BookmarkCard({
   const { toggleFavorite, archiveBookmark, trashBookmark } =
     useBookmarksStore();
   const [allTags, setAllTags] = React.useState<any[]>([]);
+  const [allCollections, setAllCollections] = React.useState<any[]>([]);
+  const [editDialogOpen, setEditDialogOpen] = React.useState(false);
 
-  // Fetch tags from API
+  // Fetch tags and collections from API
   React.useEffect(() => {
-    async function fetchTags() {
+    async function fetchData() {
       try {
-        const response = await fetch("/api/tags");
-        if (response.ok) {
-          const data = await response.json();
+        const [tagsRes, collectionsRes] = await Promise.all([
+          fetch("/api/tags"),
+          fetch("/api/collections"),
+        ]);
+        if (tagsRes.ok) {
+          const data = await tagsRes.json();
           setAllTags(data.tags || []);
         }
+        if (collectionsRes.ok) {
+          const data = await collectionsRes.json();
+          setAllCollections(data.collections || []);
+        }
       } catch (error) {
-        console.error("Error fetching tags:", error);
+        console.error("Error fetching data:", error);
       }
     }
-    fetchTags();
+    fetchData();
   }, []);
 
   const bookmarkTags = allTags.filter((tag) => bookmark.tags.includes(tag.id));
@@ -68,7 +91,7 @@ export function BookmarkCard({
     const [error, setError] = React.useState(false);
 
     if (!src || error) {
-      return <Bookmark className={className} />;
+      return <BookmarkIcon className={className} />;
     }
 
     return (
@@ -86,100 +109,114 @@ export function BookmarkCard({
 
   if (variant === "list") {
     return (
-      <div className="group flex items-center gap-4 p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors">
-        <div className="size-10 rounded-lg bg-muted flex items-center justify-center overflow-hidden shrink-0">
-          <Favicon
-            src={bookmark.favicon}
-            alt={bookmark.title}
-            className={cn("size-6", bookmark.hasDarkIcon && "dark:invert")}
-          />
-        </div>
-
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <h3 className="font-medium truncate">{bookmark.title}</h3>
-            {bookmarkTags.length > 0 && (
-              <div className="hidden sm:flex items-center gap-1">
-                {bookmarkTags.slice(0, 2).map((tag) => (
-                  <span
-                    key={tag.id}
-                    className={cn(
-                      "inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium",
-                      tag.color
-                    )}
-                  >
-                    {tag.name}
-                  </span>
-                ))}
-                {bookmarkTags.length > 2 && (
-                  <span className="text-[10px] text-muted-foreground">
-                    +{bookmarkTags.length - 2}
-                  </span>
-                )}
-              </div>
-            )}
-          </div>
-          <p className="text-sm text-muted-foreground truncate">
-            {bookmark.url}
-          </p>
-        </div>
-
-        <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="icon-xs"
-            onClick={() => toggleFavorite(bookmark.id)}
-          >
-            <Heart
-              className={cn(
-                "size-4",
-                bookmark.isFavorite && "fill-red-500 text-red-500"
-              )}
+      <>
+        <div className="group flex items-center gap-4 p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors">
+          <div className="size-10 rounded-lg bg-muted flex items-center justify-center overflow-hidden shrink-0">
+            <Favicon
+              src={bookmark.favicon}
+              alt={bookmark.title}
+              className={cn("size-6", bookmark.hasDarkIcon && "dark:invert")}
             />
-          </Button>
-          <Button variant="ghost" size="icon-xs" onClick={handleOpenUrl}>
-            <ExternalLink className="size-4" />
-          </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon-xs">
-                <MoreHorizontal className="size-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={handleCopyUrl}>
-                <Copy className="size-4 mr-2" />
-                Copy URL
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Pencil className="size-4 mr-2" />
-                Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Tag className="size-4 mr-2" />
-                Add Tags
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => archiveBookmark(bookmark.id)}>
-                <Archive className="size-4 mr-2" />
-                Archive
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="text-destructive"
-                onClick={() => trashBookmark(bookmark.id)}
-              >
-                <Trash2 className="size-4 mr-2" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          </div>
+
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <h3 className="font-medium truncate">{bookmark.title}</h3>
+              {bookmarkTags.length > 0 && (
+                <div className="hidden sm:flex items-center gap-1">
+                  {bookmarkTags.slice(0, 2).map((tag) => (
+                    <span
+                      key={tag.id}
+                      className={cn(
+                        "inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium",
+                        tag.color
+                      )}
+                    >
+                      {tag.name}
+                    </span>
+                  ))}
+                  {bookmarkTags.length > 2 && (
+                    <span className="text-[10px] text-muted-foreground">
+                      +{bookmarkTags.length - 2}
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+            <p className="text-sm text-muted-foreground truncate">
+              {bookmark.url}
+            </p>
+          </div>
+
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              onClick={() => toggleFavorite(bookmark.id)}
+            >
+              <Heart
+                className={cn(
+                  "size-4",
+                  bookmark.isFavorite && "fill-red-500 text-red-500"
+                )}
+              />
+            </Button>
+            <Button variant="ghost" size="icon-xs" onClick={handleOpenUrl}>
+              <ExternalLink className="size-4" />
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon-xs">
+                  <MoreHorizontal className="size-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={handleCopyUrl}>
+                  <Copy className="size-4 mr-2" />
+                  Copy URL
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setEditDialogOpen(true)}>
+                  <Pencil className="size-4 mr-2" />
+                  Edit
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Tag className="size-4 mr-2" />
+                  Add Tags
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => archiveBookmark(bookmark.id)}>
+                  <Archive className="size-4 mr-2" />
+                  Archive
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="text-destructive"
+                  onClick={() => trashBookmark(bookmark.id)}
+                >
+                  <Trash2 className="size-4 mr-2" />
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
-      </div>
+
+        <EditBookmarkDialog
+          bookmark={bookmark}
+          collections={allCollections}
+          tags={allTags}
+          open={editDialogOpen}
+          onOpenChange={setEditDialogOpen}
+          onUpdate={() => {
+            // Refresh will be handled by the dialog
+          }}
+        />
+      </>
     );
   }
 
   return (
-    <div className="group relative flex flex-col rounded-xl border bg-card overflow-hidden hover:bg-accent/30 transition-colors">
+    <>
+      <div className="group relative flex flex-col rounded-xl border bg-card overflow-hidden hover:bg-accent/30 transition-colors">
       <div className="absolute top-3 right-3 z-10 flex items-center gap-1">
         <Button
           variant="secondary"
@@ -213,7 +250,7 @@ export function BookmarkCard({
               <ExternalLink className="size-4 mr-2" />
               Open in new tab
             </DropdownMenuItem>
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setEditDialogOpen(true)}>
               <Pencil className="size-4 mr-2" />
               Edit
             </DropdownMenuItem>
@@ -280,6 +317,18 @@ export function BookmarkCard({
           )}
         </div>
       </button>
-    </div>
+      </div>
+
+      <EditBookmarkDialog
+        bookmark={bookmark}
+        collections={allCollections}
+        tags={allTags}
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        onUpdate={() => {
+          // Refresh will be handled by the dialog
+        }}
+      />
+    </>
   );
 }

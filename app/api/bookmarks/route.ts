@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
     const tags = searchParams.get("tags");
 
     let queryText = `
-      SELECT b.*, COALESCE STRING_AGG(t.name, ',') as tag_names
+      SELECT b.*, COALESCE(STRING_AGG(t.name, ','), '') as tag_names
       FROM bookmarks b
       LEFT JOIN bookmark_tags bt ON b.id = bt.bookmark_id
       LEFT JOIN tags t ON bt.tag_id = t.id
