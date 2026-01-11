@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__filesystem__list_allowed_directories",
+      "mcp__filesystem__directory_tree",
+      "Bash(if exist wrangler.toml del wrangler.toml)",
+      "Bash(if exist open-next.config.ts del open-next.config.ts)",
+      "Bash(if exist deploy.sh del deploy.sh)",
+      "Bash(if exist deploy.bat del deploy.bat)",
+      "Bash(if exist CLOUDFLARE_D1_DEPLOY.md del CLOUDFLARE_D1_DEPLOY.md)",
+      "Bash(if exist CLOUDFLARE_DEPLOY.md del CLOUDFLARE_DEPLOY.md)",
+      "Bash(powershell:*)",
+      "Bash(cmd /c \"cd /d D:\\\\Project\\\\bm-square-ui\\\\bookmarks && del wrangler.toml open-next.config.ts deploy.sh deploy.bat CLOUDFLARE_D1_DEPLOY.md CLOUDFLARE_DEPLOY.md nul 2>nul && echo Deleted successfully || echo Some files not found\")",
+      "mcp__filesystem__list_directory",
+      "Bash(cmd /c \"cd /d D:\\\\Project\\\\bm-square-ui\\\\bookmarks && rd /s /q wrangler && del nul && echo Cleanup complete\")",
+      "Bash(pnpm install)",
+      "Bash(CI=true pnpm install:*)",
+      "Bash(pnpm install:*)",
+      "Bash(pnpm build:*)"
+    ]
+  }
+}
