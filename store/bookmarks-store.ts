@@ -22,6 +22,8 @@ interface BookmarksState {
   setViewMode: (mode: ViewMode) => void;
   setSortBy: (sort: SortBy) => void;
   setFilterType: (filter: FilterType) => void;
+  setBookmarks: (bookmarks: Bookmark[]) => void;
+  addBookmark: (bookmark: Bookmark) => void;
   toggleFavorite: (bookmarkId: string) => void;
   archiveBookmark: (bookmarkId: string) => void;
   restoreFromArchive: (bookmarkId: string) => void;
@@ -63,6 +65,11 @@ export const useBookmarksStore = create<BookmarksState>((set, get) => ({
   setSortBy: (sort) => set({ sortBy: sort }),
 
   setFilterType: (filter) => set({ filterType: filter }),
+
+  setBookmarks: (bookmarks) => set({ bookmarks }),
+
+  addBookmark: (bookmark) =>
+    set((state) => ({ bookmarks: [bookmark, ...state.bookmarks] })),
 
   toggleFavorite: (bookmarkId) =>
     set((state) => ({

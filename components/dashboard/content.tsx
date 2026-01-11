@@ -1,13 +1,27 @@
 "use client";
 
+import * as React from "react";
 import { useBookmarksStore } from "@/store/bookmarks-store";
-import { collections, tags } from "@/mock-data/bookmarks";
 import { BookmarkCard } from "./bookmark-card";
 import { StatsCards } from "./stats-cards";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 
+type Bookmark = {
+  id: string;
+  title: string;
+  url: string;
+  description: string;
+  favicon: string;
+  collectionId: string;
+  tags: string[];
+  createdAt: string;
+  isFavorite: boolean;
+  hasDarkIcon?: boolean;
+};
+
 export function BookmarksContent() {
+  const [isLoading, setIsLoading] = React.useState(true);
   const {
     selectedCollection,
     getFilteredBookmarks,
@@ -17,14 +31,43 @@ export function BookmarksContent() {
     filterType,
     setFilterType,
     sortBy,
+    setBookmarks,
   } = useBookmarksStore();
   const filteredBookmarks = getFilteredBookmarks();
 
-  const currentCollection = collections.find(
-    (c) => c.id === selectedCollection
-  );
+  // Fetch bookmarks from API on component mount
+  React.useEffect(() => {
+    async function fetchBookmarks() {
+      try {
+        setIsLoading(true);
+        const response = await fetch("/api/bookmarks");
+        if (response.ok) {
+          const data = await response.json();
+          // Convert API response to Bookmark format
+          const bookmarks: Bookmark[] = data.bookmarks.map((b: any) => ({
+            id: b.id,
+            title: b.title,
+            url: b.url,
+            description: b.description || "",
+            favicon: b.favicon || "",
+            collectionId: b.collectionId || "",
+            tags: b.tags || [],
+            createdAt: b.createdAt,
+            isFavorite: b.isFavorite || false,
+            hasDarkIcon: b.hasDarkIcon || false,
+          }));
+          setBookmarks(bookmarks);
+        }
+      } catch (error) {
+        console.error("Error fetching bookmarks:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
 
-  const activeTagsData = tags.filter((t) => selectedTags.includes(t.id));
+    fetchBookmarks();
+  }, [setBookmarks]);
+
   const hasActiveFilters =
     selectedTags.length > 0 || filterType !== "all" || sortBy !== "date-newest";
 
@@ -36,50 +79,20 @@ export function BookmarksContent() {
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div>
-              <h2 className="text-lg font-semibold">
-                {currentCollection?.name || "All Bookmarks"}
-              </h2>
+              <h2 className="text-lg font-semibold">All Bookmarks</h2>
               <p className="text-sm text-muted-foreground">
                 {filteredBookmarks.length} bookmark
                 {filteredBookmarks.length !== 1 ? "s" : ""}
                 {hasActiveFilters && " (filtered)"}
               </p>
             </div>
-
-            {(activeTagsData.length > 0 || filterType !== "all") && (
-              <div className="flex flex-wrap items-center gap-2">
-                {filterType !== "all" && (
-                  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium bg-primary/10 text-primary">
-                    {filterType === "favorites" && "Favorites only"}
-                    {filterType === "with-tags" && "With tags"}
-                    {filterType === "without-tags" && "Without tags"}
-                    <button
-                      onClick={() => setFilterType("all")}
-                      className="hover:bg-primary/20 rounded-full p-0.5"
-                    >
-                      <X className="size-3" />
-                    </button>
-                  </span>
-                )}
-                {activeTagsData.map((tag) => (
-                  <span
-                    key={tag.id}
-                    className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium bg-primary text-primary-foreground"
-                  >
-                    {tag.name}
-                    <button
-                      onClick={() => toggleTag(tag.id)}
-                      className="hover:bg-primary-foreground/20 rounded-full p-0.5"
-                    >
-                      <X className="size-3" />
-                    </button>
-                  </span>
-                ))}
-              </div>
-            )}
           </div>
 
-          {viewMode === "grid" ? (
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-muted-foreground">Loading bookmarks...</div>
+            </div>
+          ) : viewMode === "grid" ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {filteredBookmarks.map((bookmark) => (
                 <BookmarkCard key={bookmark.id} bookmark={bookmark} />
@@ -97,7 +110,7 @@ export function BookmarksContent() {
             </div>
           )}
 
-          {filteredBookmarks.length === 0 && (
+          {!isLoading && filteredBookmarks.length === 0 && (
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <div className="size-12 rounded-full bg-muted flex items-center justify-center mb-4">
                 <svg

@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Plus } from "lucide-react";
+import { useBookmarksStore } from "@/store/bookmarks-store";
 
 interface Collection {
   id: string;
@@ -50,6 +51,7 @@ export function AddBookmarkDialog({ collections = [], tags = [] }: AddBookmarkDi
   const [description, setDescription] = React.useState("");
   const [collectionId, setCollectionId] = React.useState<string>("all");
   const [selectedTags, setSelectedTags] = React.useState<string[]>([]);
+  const { addBookmark } = useBookmarksStore();
 
   const resetForm = () => {
     setTitle("");
@@ -78,15 +80,31 @@ export function AddBookmarkDialog({ collections = [], tags = [] }: AddBookmarkDi
       });
 
       if (response.ok) {
+        const data = await response.json();
+
+        // Add the new bookmark to the store
+        addBookmark({
+          id: data.id,
+          title,
+          url,
+          description,
+          favicon: "", // Will be auto-generated
+          collectionId: collectionId === "all" ? "" : collectionId,
+          tags: selectedTags,
+          createdAt: new Date().toISOString(),
+          isFavorite: false,
+          hasDarkIcon: false,
+        });
+
         resetForm();
         setOpen(false);
-        // Refresh the page to show the new bookmark
-        window.location.reload();
       } else {
         console.error("Failed to add bookmark");
+        alert("Failed to add bookmark. Please try again.");
       }
     } catch (error) {
       console.error("Error adding bookmark:", error);
+      alert("Error adding bookmark. Please try again.");
     } finally {
       setIsLoading(false);
     }
