@@ -1,8 +1,8 @@
 "use client";
 
+import * as React from "react";
 import { Bookmark, Star, Tag, FolderOpen } from "lucide-react";
 import { useBookmarksStore } from "@/store/bookmarks-store";
-import { collections, tags } from "@/mock-data/bookmarks";
 
 const stats = [
   {
@@ -29,12 +29,40 @@ const stats = [
 
 export function StatsCards() {
   const { bookmarks } = useBookmarksStore();
+  const [collectionsCount, setCollectionsCount] = React.useState(0);
+  const [tagsCount, setTagsCount] = React.useState(0);
+
+  // Fetch collections and tags count from API
+  React.useEffect(() => {
+    async function fetchData() {
+      try {
+        const [collectionsRes, tagsRes] = await Promise.all([
+          fetch("/api/collections"),
+          fetch("/api/tags"),
+        ]);
+
+        if (collectionsRes.ok) {
+          const collectionsData = await collectionsRes.json();
+          setCollectionsCount((collectionsData.collections || []).length);
+        }
+
+        if (tagsRes.ok) {
+          const tagsData = await tagsRes.json();
+          setTagsCount((tagsData.tags || []).length);
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    }
+
+    fetchData();
+  }, []);
 
   const values = [
     bookmarks.length,
     bookmarks.filter((b) => b.isFavorite).length,
-    collections.length - 1,
-    tags.length,
+    collectionsCount,
+    tagsCount,
   ];
 
   return (

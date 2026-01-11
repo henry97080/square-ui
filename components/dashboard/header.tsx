@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,7 @@ import {
 import { useBookmarksStore } from "@/store/bookmarks-store";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { AddBookmarkDialog } from "./add-bookmark-dialog";
 
 interface BookmarksHeaderProps {
   title?: string;
@@ -56,6 +58,35 @@ export function BookmarksHeader({ title = "Bookmarks" }: BookmarksHeaderProps) {
     filterType,
     setFilterType,
   } = useBookmarksStore();
+
+  const [collections, setCollections] = React.useState<any[]>([]);
+  const [tags, setTags] = React.useState<any[]>([]);
+
+  // Fetch collections and tags for the dialog
+  React.useEffect(() => {
+    async function fetchData() {
+      try {
+        const [collectionsRes, tagsRes] = await Promise.all([
+          fetch("/api/collections"),
+          fetch("/api/tags"),
+        ]);
+
+        if (collectionsRes.ok) {
+          const collectionsData = await collectionsRes.json();
+          setCollections(collectionsData.collections || []);
+        }
+
+        if (tagsRes.ok) {
+          const tagsData = await tagsRes.json();
+          setTags(tagsData.tags || []);
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    }
+
+    fetchData();
+  }, []);
 
   const currentSort = sortOptions.find((opt) => opt.value === sortBy);
   const currentFilter = filterOptions.find((opt) => opt.value === filterType);
@@ -167,10 +198,7 @@ export function BookmarksHeader({ title = "Bookmarks" }: BookmarksHeaderProps) {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <Button size="sm" className="hidden sm:flex">
-            <Plus className="size-4" />
-            Add Bookmark
-          </Button>
+          <AddBookmarkDialog collections={collections} tags={tags} />
 
           <Separator orientation="vertical" className="h-5 hidden sm:block" />
 
